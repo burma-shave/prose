@@ -1,6 +1,16 @@
-@(message: String)
+@(message: String, myForm: Form[String])
+
+@import play.api.data.Forms._
+@import helper._
+
+
 
 @main(message) {
-    
+
+    @form(routes.Application.loginPost) {
+        @inputText(myForm("openid"))
+        <input type="submit" value="Delete">
+    }
+
 
 }
