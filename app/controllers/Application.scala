@@ -2,12 +2,13 @@ package controllers
 
 import play.api._
 import data.Form
-import scala.concurrent._
 import play.api.data.Forms._
 
 import play.api.mvc._
 import play.api.libs.openid._
 import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.Seq
 
 
 
@@ -32,8 +33,11 @@ object Application extends Controller {
     },
     {
       case (openid) =>  AsyncResult (
-        OpenID.redirectURL(openid, routes.Application.openIDCallback.absoluteURL()) map { url =>
-          Ok(url)
+        OpenID.redirectURL(
+          openid,
+          routes.Application.openIDCallback.absoluteURL(),
+          Seq("email" -> "http://schema.openid.net/contact/email"))
+          map { url => Redirect(url)
         } recover {
           case _ => Redirect(routes.Application.index)
         }
@@ -44,8 +48,9 @@ object Application extends Controller {
 
   def openIDCallback = Action { implicit request =>
     AsyncResult(
-      OpenID.verifiedId map { info =>
-        Ok(info.id + "\n" + info.attributes)
+      OpenID.verifiedId map { info => {
+        Ok(info.id + "\n" + info.attributes).withSession("user" -> info.attributes.getOrElse("email", "error"))
+      }
       } recover {
         case _ => Redirect(routes.Application.index)
       }
