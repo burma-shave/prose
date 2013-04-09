@@ -15,6 +15,14 @@ import models.{ArticleRepository, UserRepository, PersistenceComponent}
  */
 trait BlogSlickComponent { this: Profile =>
 
+
+}
+
+trait SlickPersistenceComponent extends PersistenceComponent with BlogSlickComponent { this: Profile =>
+
+  val userRepository = new SlickUserRepository
+  val articleRepository = new SlickArticleRepository
+
   import profile.simple._
 
   object Users extends Table[(String, String, String)]("USERS") {
@@ -32,14 +40,6 @@ trait BlogSlickComponent { this: Profile =>
     def body = column[String]("BODY")
     def * = id ~ authorId ~ title ~ body
   }
-}
-
-trait SlickPersistenceComponent extends PersistenceComponent {
-
-  import models.slick.current._
-
-  val userRepository = new SlickUserRepository
-  val articleRepository = new SlickArticleRepository
 
   class SlickUserRepository extends UserRepository {
     def create(id: UUID, firstName: String, surname: String) {
@@ -58,7 +58,8 @@ trait SlickPersistenceComponent extends PersistenceComponent {
   }
 }
 
-object current extends BlogSlickComponent with Profile {
-  implicit val app: play.api.Application = play.api.Play.current
-  val profile: ExtendedProfile = DB.driver(play.api.Play.current)
+class DAO(override val profile: ExtendedProfile) extends SlickPersistenceComponent with Profile
+
+object current {
+  val dao = new DAO(DB.driver(play.api.Play.current))
 }

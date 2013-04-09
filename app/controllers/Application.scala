@@ -15,7 +15,7 @@ trait Command
 case class CreateUser(id:UUID, firstName: String, surname: String) extends Command
 case class CreateArticle(id: UUID, author: UUID, title: String, body: String) extends Command
 
-class CommandHandler { this: PersistenceComponent =>
+class CommandHandler(implicit val app: Application = play.api.Play.current) { this: PersistenceComponent =>
   def handle(command: Command) = command match {
     case CreateUser(id:UUID, firstName: String, surname: String) =>
       userRepository.create(id, firstName, surname)
