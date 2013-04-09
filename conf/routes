@@ -11,3 +11,5 @@ GET     /assets/*file               controllers.Assets.at(path="/public", file)
 GET     /openidcallback             controllers.Application.openIDCallback
 
 POST    /login                      controllers.Application.loginPost
+
+POST    /users/                     controllers.Application.createUser

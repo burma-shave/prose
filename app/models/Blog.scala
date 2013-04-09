@@ -8,12 +8,15 @@ package models
 
 import java.util.UUID
 import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
+
+import models.slick.current.dao._
+import models.slick.current._
+
+import play.api.Play.current
 
 
 trait Command
 case class CreateUser(id:UUID, firstName: String, surname: String) extends Command
-
 case class CreateArticle(id: UUID, author: UUID, title: String, body: String) extends Command
 
 trait UserRepository {
@@ -41,7 +44,6 @@ trait StdOutPersistenceComponent extends PersistenceComponent {
 
   class StdOutArticleRepository extends ArticleRepository {
     def create(id: UUID, author: UUID, title: String, body: String) {
-
         println("create article!")
     }
   }
@@ -52,31 +54,9 @@ trait SlickPersistenceComponent extends PersistenceComponent {
   val userRepository = new SlickUserRepository
   val articleRepository = new SlickArticleRepository
 
-
-
-  object Users extends Table[(String, String, String)]("USERS") {
-    def id = column[String]("ID", O.PrimaryKey) // This is the primary key column
-    def firstName = column[String]("FIRSTNAME")
-    def surName = column[String]("SURNAME")
-    // Every table needs a * projection with the same type as the table's type parameter
-    def * = id ~ firstName ~ surName
-  }
-
-  object Articles extends Table[(String, String, String, String)]("ARTICLES") {
-    def id = column[String]("ID", O.PrimaryKey) // This is the primary key column
-    def authorId = column[String]("AUTHOR_ID")
-    def title = column[String]("TITLE")
-    def body = column[String]("BODY")
-    def * = id ~ authorId ~ title ~ body
-
-  }
-
   class SlickUserRepository extends UserRepository {
-
     def create(id: UUID, firstName: String, surname: String) {
-      Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver") withSession {
-        println(Users.ddl)
-        Users.ddl.create
+      db withSession { implicit session =>
         Users.insert(id.toString, firstName, surname)
       }
     }
@@ -84,13 +64,12 @@ trait SlickPersistenceComponent extends PersistenceComponent {
 
   class SlickArticleRepository extends ArticleRepository{
     def create(id: UUID, author: UUID, title: String, body: String) {
-
+      db withSession { implicit session =>
+        Articles.insert(id.toString(), author.toString(), title, body)
+      }
     }
   }
  }
-
-//trait StdOutPersistenceComponent extends PersistenceComponent {
-//}
 
 class CommandHandler { this: PersistenceComponent =>
   def handle(command: Command) = command match {
