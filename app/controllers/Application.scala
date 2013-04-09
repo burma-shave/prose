@@ -3,20 +3,30 @@ package controllers
 import play.api._
 import play.api.data.Forms._
 import play.api.data._
-
-
 import play.api.mvc._
 import play.api.libs.openid._
 import play.api.libs.concurrent.Execution.Implicits._
-
 import scala.Seq
-
-import models.App.commandHandler._
-import models.CreateUser
 import java.util.UUID
+import models.slick.SlickPersistenceComponent
+import models.PersistenceComponent
 
+trait Command
+case class CreateUser(id:UUID, firstName: String, surname: String) extends Command
+case class CreateArticle(id: UUID, author: UUID, title: String, body: String) extends Command
+
+class CommandHandler { this: PersistenceComponent =>
+  def handle(command: Command) = command match {
+    case CreateUser(id:UUID, firstName: String, surname: String) =>
+      userRepository.create(id, firstName, surname)
+    case CreateArticle(id: UUID, author: UUID, title: String, body: String) =>
+      articleRepository.create(id, author, title, body)
+  }
+}
 
 object Application extends Controller {
+
+  val commandHandler: CommandHandler = new CommandHandler with SlickPersistenceComponent
 
   val loginForm = Form[String](single(
     "openid" -> nonEmptyText
@@ -30,13 +40,13 @@ object Application extends Controller {
   )
 
   def index = Action {
-    handle(CreateUser(UUID.randomUUID(), "Eric", "Jutrzenka"))
+    commandHandler.handle(CreateUser(UUID.randomUUID(), "Eric", "Jutrzenka"))
     Ok(views.html.index("!", loginForm))
   }
 
 
   def createUser = Action { implicit request =>
-    handle(createUserForm.bindFromRequest.get)
+    commandHandler.handle(createUserForm.bindFromRequest.get)
     Ok("ok")
   }
 
