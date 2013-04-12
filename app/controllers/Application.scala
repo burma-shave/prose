@@ -8,7 +8,7 @@ import play.api.libs.openid._
 import play.api.libs.concurrent.Execution.Implicits._
 import scala.Seq
 import java.util.UUID
-import models.slick.SlickPersistenceComponent
+import models.slick.{CurrentDb, SlickPersistenceComponent}
 import models.PersistenceComponent
 
 trait Command
@@ -26,7 +26,8 @@ class CommandHandler(implicit val app: Application = play.api.Play.current) { th
 
 object Application extends Controller {
 
-  val commandHandler: CommandHandler = new CommandHandler with SlickPersistenceComponent
+  val commandHandler: CommandHandler = new CommandHandler with SlickPersistenceComponent with CurrentDb
+  import commandHandler._
 
   val loginForm = Form[String](single(
     "openid" -> nonEmptyText
@@ -40,13 +41,13 @@ object Application extends Controller {
   )
 
   def index = Action {
-    commandHandler.handle(CreateUser(UUID.randomUUID(), "Eric", "Jutrzenka"))
+    handle(CreateUser(UUID.randomUUID(), "Eric", "Jutrzenka"))
     Ok(views.html.index("!", loginForm))
   }
 
 
   def createUser = Action { implicit request =>
-    commandHandler.handle(createUserForm.bindFromRequest.get)
+    handle(createUserForm.bindFromRequest.get)
     Ok("ok")
   }
 

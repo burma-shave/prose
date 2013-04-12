@@ -4,7 +4,6 @@ import play.api.db.slick.Profile
 import scala.slick.driver.ExtendedProfile
 import play.api.db.slick.DB
 import java.util.UUID
-import scala.slick.driver.H2Driver.simple._
 
 import models.{ArticleRepository, UserRepository, PersistenceComponent}
 
@@ -13,17 +12,14 @@ import models.{ArticleRepository, UserRepository, PersistenceComponent}
  * Date:   07/04/2013
  * Time:   18:18
  */
-trait BlogSlickComponent { this: Profile =>
-
-
-}
-
-trait SlickPersistenceComponent extends PersistenceComponent with BlogSlickComponent { this: Profile =>
+trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
 
   val userRepository = new SlickUserRepository
   val articleRepository = new SlickArticleRepository
 
   import profile.simple._
+  import play.api.Play.current
+
 
   object Users extends Table[(String, String, String)]("USERS") {
     def id = column[String]("ID", O.PrimaryKey) // This is the primary key column
@@ -58,8 +54,6 @@ trait SlickPersistenceComponent extends PersistenceComponent with BlogSlickCompo
   }
 }
 
-class DAO(override val profile: ExtendedProfile) extends SlickPersistenceComponent with Profile
-
-object current {
-  val dao = new DAO(DB.driver(play.api.Play.current))
+trait CurrentDb extends Profile {
+  override val profile: ExtendedProfile = DB.driver(play.api.Play.current)
 }
