@@ -1,10 +1,13 @@
 package models.slick
 
-
 import config.slick._
 import java.util.UUID
 
 import models.{ArticleRepository, UserRepository, PersistenceComponent}
+import config.CurrentPlayDb
+import scala.slick.session.Database
+
+import scala.slick.driver.ExtendedProfile
 
 /**
  * Author: Eric Jutrzenka
@@ -13,20 +16,20 @@ import models.{ArticleRepository, UserRepository, PersistenceComponent}
  */
 trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
 
-  val userRepository = new SlickUserRepository
-  val articleRepository = new SlickArticleRepository
+  implicit val userRepository = new SlickUserRepository
+  implicit val articleRepository = new SlickArticleRepository
 
   import profile.simple._
 
   object Users extends Table[(String, String, String)]("USERS") {
-    def id = column[String]("ID", O.PrimaryKey) // This is the primary key column
+    def id = column[String]("ID", O.PrimaryKey)
     def firstName = column[String]("FIRSTNAME")
     def surName = column[String]("SURNAME")
     def * = id ~ firstName ~ surName
   }
 
   object Articles extends Table[(String, String, String, String)]("ARTICLES") {
-    def id = column[String]("ID", O.PrimaryKey) // This is the primary key column
+    def id = column[String]("ID", O.PrimaryKey)
     def authorId = column[String]("AUTHOR_ID")
     def title = column[String]("TITLE")
     def body = column[String]("BODY")
@@ -50,6 +53,7 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
   }
 }
 
-
-
+object persistence {
+  val current: PersistenceComponent = new SlickPersistenceComponent with CurrentPlayDb
+}
 

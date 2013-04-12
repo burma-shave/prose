@@ -8,17 +8,21 @@ import play.api.libs.openid._
 import play.api.libs.concurrent.Execution.Implicits._
 import scala.Seq
 import java.util.UUID
+
+import models.{PersistenceComponent, ArticleRepository, UserRepository}
 import models.slick.SlickPersistenceComponent
 import config.CurrentPlayDb
-import models.PersistenceComponent
 
 trait Command
-case class CreateUser(id:UUID, firstName: String, surname: String) extends Command
+
+case class CreateUser(id: UUID, firstName: String, surname: String) extends Command
+
 case class CreateArticle(id: UUID, author: UUID, title: String, body: String) extends Command
 
-class CommandHandler(implicit val app: Application = play.api.Play.current) { this: PersistenceComponent =>
+class CommandHandler(implicit val app: Application = play.api.Play.current) {
+  this: PersistenceComponent =>
   def handle(command: Command) = command match {
-    case CreateUser(id:UUID, firstName: String, surname: String) =>
+    case CreateUser(id: UUID, firstName: String, surname: String) =>
       userRepository.create(id, firstName, surname)
     case CreateArticle(id: UUID, author: UUID, title: String, body: String) =>
       articleRepository.create(id, author, title, body)
@@ -27,7 +31,11 @@ class CommandHandler(implicit val app: Application = play.api.Play.current) { th
 
 object Application extends Controller {
 
-  val commandHandler: CommandHandler = new CommandHandler with SlickPersistenceComponent with  CurrentPlayDb
+  val commandHandler: CommandHandler =
+    new CommandHandler
+      with SlickPersistenceComponent
+      with CurrentPlayDb
+
   import commandHandler._
 
   val loginForm = Form[String](single(
@@ -35,8 +43,8 @@ object Application extends Controller {
   ))
 
   val createUserForm = Form(mapping(
-     "firstName" -> nonEmptyText,
-     "surname" -> nonEmptyText
+    "firstName" -> nonEmptyText,
+    "surname" -> nonEmptyText
   )((firstName, surname) => CreateUser(UUID.randomUUID(), firstName, surname))
     ((create: CreateUser) => Some(create.firstName, create.surname))
   )
@@ -47,43 +55,46 @@ object Application extends Controller {
   }
 
 
-  def createUser = Action { implicit request =>
-    handle(createUserForm.bindFromRequest.get)
-    Ok("ok")
+  def createUser = Action {
+    implicit request =>
+      handle(createUserForm.bindFromRequest.get)
+      Ok("ok")
   }
 
 
-  def loginPost = Action { implicit request =>
-    loginForm.bindFromRequest.fold(
-    error => {
-      Logger.info("bad request " + error.toString)
-      BadRequest(error.toString)
-    },
-    {
-      case (openid) =>  AsyncResult (
-        OpenID.redirectURL(
-          openid,
-          routes.Application.openIDCallback.absoluteURL(),
-          Seq("email" -> "http://schema.openid.net/contact/email"))
-          map { url => Redirect(url)
+  def loginPost = Action {
+    implicit request =>
+      loginForm.bindFromRequest.fold(
+      error => {
+        Logger.info("bad request " + error.toString)
+        BadRequest(error.toString)
+      }, {
+        case (openid) => AsyncResult(
+          OpenID.redirectURL(
+            openid,
+            routes.Application.openIDCallback.absoluteURL(),
+            Seq("email" -> "http://schema.openid.net/contact/email"))
+            map {
+            url => Redirect(url)
+          } recover {
+            case _ => Redirect(routes.Application.index)
+          }
+        )
+      }
+      )
+  }
+
+  def openIDCallback = Action {
+    implicit request =>
+      AsyncResult(
+        OpenID.verifiedId map {
+          info => {
+            Ok(info.id + "\n" + info.attributes).withSession("user" -> info.attributes.getOrElse("email", "error"))
+          }
         } recover {
           case _ => Redirect(routes.Application.index)
         }
       )
-    }
-    )
-  }
-
-
-  def openIDCallback = Action { implicit request =>
-    AsyncResult(
-      OpenID.verifiedId map { info => {
-        Ok(info.id + "\n" + info.attributes).withSession("user" -> info.attributes.getOrElse("email", "error"))
-      }
-      } recover {
-        case _ => Redirect(routes.Application.index)
-      }
-    )
   }
 
 }

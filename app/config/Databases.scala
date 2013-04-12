@@ -20,3 +20,11 @@ trait CurrentPlayDb extends Profile {
   override val db: Database = Database.forDataSource(play.api.db.DB.getDataSource())
 }
 
+trait TestDb extends Profile {
+  import scala.slick.driver.H2Driver
+
+  override val profile: ExtendedProfile = H2Driver
+  override val db: Database = Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
+
+}
+
