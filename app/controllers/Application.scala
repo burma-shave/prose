@@ -8,7 +8,8 @@ import play.api.libs.openid._
 import play.api.libs.concurrent.Execution.Implicits._
 import scala.Seq
 import java.util.UUID
-import models.slick.{CurrentDb, SlickPersistenceComponent}
+import models.slick.SlickPersistenceComponent
+import config.CurrentPlayDb
 import models.PersistenceComponent
 
 trait Command
@@ -26,7 +27,7 @@ class CommandHandler(implicit val app: Application = play.api.Play.current) { th
 
 object Application extends Controller {
 
-  val commandHandler: CommandHandler = new CommandHandler with SlickPersistenceComponent with CurrentDb
+  val commandHandler: CommandHandler = new CommandHandler with SlickPersistenceComponent with  CurrentPlayDb
   import commandHandler._
 
   val loginForm = Form[String](single(

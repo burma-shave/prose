@@ -1,8 +1,7 @@
 package models.slick
 
-import play.api.db.slick.Profile
-import scala.slick.driver.ExtendedProfile
-import play.api.db.slick.DB
+
+import config.slick._
 import java.util.UUID
 
 import models.{ArticleRepository, UserRepository, PersistenceComponent}
@@ -18,14 +17,11 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
   val articleRepository = new SlickArticleRepository
 
   import profile.simple._
-  import play.api.Play.current
-
 
   object Users extends Table[(String, String, String)]("USERS") {
     def id = column[String]("ID", O.PrimaryKey) // This is the primary key column
     def firstName = column[String]("FIRSTNAME")
     def surName = column[String]("SURNAME")
-    // Every table needs a * projection with the same type as the table's type parameter
     def * = id ~ firstName ~ surName
   }
 
@@ -39,7 +35,7 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
 
   class SlickUserRepository extends UserRepository {
     def create(id: UUID, firstName: String, surname: String) {
-      DB withSession { implicit session =>
+      db withSession { implicit session: Session =>
         Users.insert(id.toString, firstName, surname)
       }
     }
@@ -47,13 +43,13 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
 
   class SlickArticleRepository extends ArticleRepository {
     def create(id: UUID, author: UUID, title: String, body: String) {
-      DB withSession { implicit session =>
+      db withSession { implicit session: Session =>
         Articles.insert(id.toString(), author.toString(), title, body)
       }
     }
   }
 }
 
-trait CurrentDb extends Profile {
-  override val profile: ExtendedProfile = DB.driver(play.api.Play.current)
-}
+
+
+
