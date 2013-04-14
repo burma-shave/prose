@@ -12,6 +12,8 @@ import java.util.UUID
 import models.{PersistenceComponent, ArticleRepository, UserRepository}
 import models.slick.SlickPersistenceComponent
 import config.CurrentPlayDb
+import securesocial.core.java.SecureSocial.SecuredAction
+import service.securesocial.{SameId, SecureSocialUserRepository}
 
 trait Command
 
@@ -29,7 +31,7 @@ class CommandHandler(implicit val app: Application = play.api.Play.current) {
   }
 }
 
-object Application extends Controller {
+object Application extends Controller with securesocial.core.SecureSocial {
 
   val commandHandler: CommandHandler =
     new CommandHandler
@@ -38,63 +40,22 @@ object Application extends Controller {
 
   import commandHandler._
 
-  val loginForm = Form[String](single(
-    "openid" -> nonEmptyText
+  val createArticleForm = Form(tuple(
+    "title" -> nonEmptyText,
+    "body" -> nonEmptyText
   ))
 
-  val createUserForm = Form(mapping(
-    "firstName" -> nonEmptyText,
-    "surname" -> nonEmptyText
-  )((firstName, surname) => CreateUser(UUID.randomUUID(), firstName, surname))
-    ((create: CreateUser) => Some(create.firstName, create.surname))
-  )
-
-  def index = Action {
-    handle(CreateUser(UUID.randomUUID(), "Eric", "Jutrzenka"))
-    Ok(views.html.index("!", loginForm))
+  def index = SecuredAction { implicit request =>
+    Ok(views.html.index("!"))
   }
 
-
-  def createUser = Action {
-    implicit request =>
-      handle(createUserForm.bindFromRequest.get)
-      Ok("ok")
+  def articles(userId: String) = SecuredAction(SameId(userId)) { implicit request =>
+    Ok(views.html.create_article(userId, createArticleForm))
   }
 
-
-  def loginPost = Action {
-    implicit request =>
-      loginForm.bindFromRequest.fold(
-      error => {
-        Logger.info("bad request " + error.toString)
-        BadRequest(error.toString)
-      }, {
-        case (openid) => AsyncResult(
-          OpenID.redirectURL(
-            openid,
-            routes.Application.openIDCallback.absoluteURL(),
-            Seq("email" -> "http://schema.openid.net/contact/email"))
-            map {
-            url => Redirect(url)
-          } recover {
-            case _ => Redirect(routes.Application.index)
-          }
-        )
-      }
-      )
+  def createArticle(userId: String) = SecuredAction(SameId(userId)) { implicit request =>
+    val (title, body) = createArticleForm.bindFromRequest().get
+    handle(CreateArticle(UUID.randomUUID(), UUID.fromString(userId), title, body))
+    Ok("ok")
   }
-
-  def openIDCallback = Action {
-    implicit request =>
-      AsyncResult(
-        OpenID.verifiedId map {
-          info => {
-            Ok(info.id + "\n" + info.attributes).withSession("user" -> info.attributes.getOrElse("email", "error"))
-          }
-        } recover {
-          case _ => Redirect(routes.Application.index)
-        }
-      )
-  }
-
 }

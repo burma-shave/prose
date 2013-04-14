@@ -5,9 +5,7 @@ import java.util.UUID
 
 import models.{ArticleRepository, UserRepository, PersistenceComponent}
 import config.CurrentPlayDb
-import scala.slick.session.Database
 
-import scala.slick.driver.ExtendedProfile
 
 /**
  * Author: Eric Jutrzenka
@@ -51,9 +49,5 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
       }
     }
   }
-}
-
-object persistence {
-  val current: PersistenceComponent = new SlickPersistenceComponent with CurrentPlayDb
 }
 

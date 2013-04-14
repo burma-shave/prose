@@ -8,8 +8,14 @@ GET     /                           controllers.Application.index
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-GET     /openidcallback             controllers.Application.openIDCallback
+# Login page
+GET     /login                      securesocial.controllers.LoginPage.login
+GET     /logout                     securesocial.controllers.LoginPage.logout
 
-POST    /login                      controllers.Application.loginPost
+# Providers entry points
+GET     /authenticate/:provider     securesocial.controllers.ProviderController.authenticate(provider)
+POST    /authenticate/:provider     securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET     /not-authorized             securesocial.controllers.ProviderController.notAuthorized
 
-POST    /users/                     controllers.Application.createUser
+POST    /users/:userId/articles/    controllers.Application.createArticle(userId: String)
+GET     /users/:userId/articles/    controllers.Application.articles(userId: String)

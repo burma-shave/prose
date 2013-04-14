@@ -1,0 +1,21 @@
+@(userId: String, createArticleForm: Form[(String, String)])
+@import helper._
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Article</title>
+</head>
+<body>
+
+    <h1>Create Article</h1>
+
+    @form(routes.Application.createArticle(userId)) {
+        @inputText(createArticleForm("title"))
+        @textarea(createArticleForm("body"))
+        <input type="submit" value="Create">
+    }
+
+</body>
+</html>

@@ -21,6 +21,3 @@ trait PersistenceComponent {
   val userRepository: UserRepository
   val articleRepository: ArticleRepository
 }
-
-
-
