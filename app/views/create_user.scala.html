@@ -1,16 +1,22 @@
-@(createUserForm: Form[String])
-@import helper._
+@(message: String)
 
-<!DOCTYPE html>
+@main(message) {
+    <form action="/users/" method="POST">
+        <div class="row">
+            <div class="span3">
+                <input type="text" placeholder="First Name" name="firstName" class="span3">
+            </div>
+        </div>
+        <div class="row">
+            <div class="span3">
+                <input type="text" placeholder="Last Name" name="lastName" class="span3">
+            </div>
+        </div>
+        <div class="row">
+            <div class="span3">
+                <input type="Submit" class="btn btn-large btn-block" />
+            </div>
+        </div>
+    </form>
 
-<html>
-<head>
-    <title>Create User</title>
-    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
-    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-    <script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")" type="text/javascript"></script>
-</head>
-<body>
-
-</body>
-</html>
+}

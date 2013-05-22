@@ -1,21 +1,22 @@
-@(userId: String, createArticleForm: Form[(String, String)])
-@import helper._
+@(message: String)
 
+@main(message) {
+    <form action="/users/" method="POST">
+        <div class="row">
+            <div class="span3">
+                <input type="text" placeholder="Title" name="firstName" class="span3">
+            </div>
+        </div>
+        <div class="row">
+            <div class="span3">
+                <input type="text" placeholder="Author" name="lastName" class="span3">
+            </div>
+        </div>
+        <div class="row">
+            <div class="span3">
+                <input type="Submit" class="btn btn-large btn-block" />
+            </div>
+        </div>
+    </form>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Create Article</title>
-</head>
-<body>
-
-    <h1>Create Article</h1>
-
-    @form(routes.Application.createArticle(userId)) {
-        @inputText(createArticleForm("title"))
-        @textarea(createArticleForm("body"))
-        <input type="submit" value="Create">
-    }
-
-</body>
-</html>
+}

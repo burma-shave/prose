@@ -10,7 +10,6 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     // Add your project dependencies here,
     "com.typesafe.slick" %% "slick" % "1.0.0",
-    "securesocial" %% "securesocial" % "master-SNAPSHOT",
     "com.h2database" % "h2" % "1.3.166",
     "com.typesafe" % "play-slick_2.10" % "0.3.1",
     jdbc

@@ -3,19 +3,19 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+GET     /                           controllers.Application.createUserView
 
 # Map static resources from the /public folder to the /assets URL path
+#GET     /                           controllers.Assets.at(path="/public/", file="index.html")
+
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-# Login page
-GET     /login                      securesocial.controllers.LoginPage.login
-GET     /logout                     securesocial.controllers.LoginPage.logout
-
-# Providers entry points
-GET     /authenticate/:provider     securesocial.controllers.ProviderController.authenticate(provider)
-POST    /authenticate/:provider     securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET     /not-authorized             securesocial.controllers.ProviderController.notAuthorized
+POST    /users/                     controllers.Application.createUser
 
 POST    /users/:userId/articles/    controllers.Application.createArticle(userId: String)
-GET     /users/:userId/articles/    controllers.Application.articles(userId: String)
+
+#GET     /users/:userId/articles/    controllers.Application.articles(userId: String)
+
+GET     /commands/createUser        controllers.Application.createUserView
+
+GET     /commands/createArticle     controllers.Application.createArticleView

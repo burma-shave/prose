@@ -4,16 +4,14 @@ import play.api._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
-import play.api.libs.openid._
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.Seq
+
 import java.util.UUID
 
-import models.{PersistenceComponent, ArticleRepository, UserRepository}
+import models.PersistenceComponent
 import models.slick.SlickPersistenceComponent
 import config.CurrentPlayDb
-import securesocial.core.java.SecureSocial.SecuredAction
-import service.securesocial.{SameId, SecureSocialUserRepository}
+
+import views._
 
 trait Command
 
@@ -31,31 +29,41 @@ class CommandHandler(implicit val app: Application = play.api.Play.current) {
   }
 }
 
-object Application extends Controller with securesocial.core.SecureSocial {
+object Application extends Controller with SlickPersistenceComponent
+with CurrentPlayDb {
+  this: PersistenceComponent =>
 
-  val commandHandler: CommandHandler =
-    new CommandHandler
-      with SlickPersistenceComponent
-      with CurrentPlayDb
-
-  import commandHandler._
 
   val createArticleForm = Form(tuple(
     "title" -> nonEmptyText,
     "body" -> nonEmptyText
   ))
 
-  def index = SecuredAction { implicit request =>
-    Ok(views.html.index("!"))
+  val createUserForm = Form(tuple(
+    "firstName" -> nonEmptyText,
+    "lastName" -> nonEmptyText
+  ))
+
+  def createUser = Action { implicit request =>
+    val (firstName, lastName) = createUserForm.bindFromRequest().get
+    val id: UUID = UUID.randomUUID
+    userRepository.create(id, firstName, lastName)
+    Created(id.toString)
   }
 
-  def articles(userId: String) = SecuredAction(SameId(userId)) { implicit request =>
-    Ok(views.html.create_article(userId, createArticleForm))
+  def createUserView = Action { implicit request =>
+    Ok(html.create_user("Create User"))
   }
 
-  def createArticle(userId: String) = SecuredAction(SameId(userId)) { implicit request =>
+  def createArticle(userId: String) = Action { implicit request =>
     val (title, body) = createArticleForm.bindFromRequest().get
-    handle(CreateArticle(UUID.randomUUID(), UUID.fromString(userId), title, body))
-    Ok("ok")
+    val id: UUID = UUID.randomUUID()
+    val author: UUID = UUID.fromString(userId)
+    articleRepository.create(id, author, title, body)
+    Ok(id.toString)
+  }
+
+  def createArticleView = Action { implicit request =>
+    Ok(html.create_article("Create User"))
   }
 }

@@ -3,8 +3,7 @@ package models.slick
 import config.slick._
 import java.util.UUID
 
-import models.{ArticleRepository, UserRepository, PersistenceComponent}
-import config.CurrentPlayDb
+import models._
 
 
 /**
@@ -19,11 +18,11 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
 
   import profile.simple._
 
-  object Users extends Table[(String, String, String)]("USERS") {
+  object Users extends Table[User]("USERS") {
     def id = column[String]("ID", O.PrimaryKey)
     def firstName = column[String]("FIRSTNAME")
-    def surName = column[String]("SURNAME")
-    def * = id ~ firstName ~ surName
+    def lastName = column[String]("SURNAME")
+    def * = id ~ firstName ~ lastName <> (User, User.unapply _)
   }
 
   object Articles extends Table[(String, String, String, String)]("ARTICLES") {
@@ -37,7 +36,12 @@ trait SlickPersistenceComponent extends PersistenceComponent { this: Profile =>
   class SlickUserRepository extends UserRepository {
     def create(id: UUID, firstName: String, surname: String) {
       db withSession { implicit session: Session =>
-        Users.insert(id.toString, firstName, surname)
+        Users.insert(User(id.toString, firstName, surname))
+      }
+    }
+    def findAll(): List[User] = {
+      db withSession { implicit session: Session =>
+        Query(Users).list()
       }
     }
   }
